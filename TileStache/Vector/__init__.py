@@ -227,7 +227,7 @@ class VectorResponse:
                     out.write(atom)
         elif format == 'ProtoBuf':
             encoded = TnProtoEncoder.encode(content)
-            out.write(encode)
+            out.write(encoded)
         elif format in ('GeoBSON', 'ArcBSON'):
             import bson
             encoded = bson.dumps(content)
