@@ -1,5 +1,6 @@
+from map import vector_pb2, common_pb2
+
 __author__ = 'yiqingj'
-from TileStache.Vector.proto import common_pb2, vector_pb2
 
 
 def _highwayToPBRoadType(highway):
