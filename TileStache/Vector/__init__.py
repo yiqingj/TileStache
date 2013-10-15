@@ -167,6 +167,8 @@ from TileStache.Core import KnownUnknown
 from TileStache.Geography import getProjectionByName
 from Arc import reserialize_to_arc, pyamf_classes
 
+from TileStache.Vector import TnProtoEncoder
+
 class VectorResponse:
     """ Wrapper class for Vector response that makes it behave like a PIL.Image object.
     
@@ -195,7 +197,7 @@ class VectorResponse:
             
             return
         
-        if format in ('GeoJSON', 'GeoBSON', 'GeoAMF'):
+        if format in ('GeoJSON', 'GeoBSON', 'GeoAMF', 'ProtoBuf'):
             content = self.content
             
             if 'wkt' in content['crs']:
@@ -223,10 +225,11 @@ class VectorResponse:
                     out.write(('%%.%if' % self.precision) % float(atom))
                 else:
                     out.write(atom)
-        
+        elif format == 'ProtoBuf':
+            encoded = TnProtoEncoder.encode(content)
+            out.write(encode)
         elif format in ('GeoBSON', 'ArcBSON'):
             import bson
-
             encoded = bson.dumps(content)
             out.write(encoded)
         
@@ -601,7 +604,10 @@ class Provider:
         
             This only accepts "geojson" for the time being.
         """
-        if extension.lower() == 'geojson':
+        if extension.lower() == 'pb':
+            return 'application/x-protobuf', 'ProtoBuf'
+
+        elif extension.lower() == 'geojson':
             return 'application/json', 'GeoJSON'
     
         elif extension.lower() == 'arcjson':
