@@ -197,7 +197,7 @@ class VectorResponse:
             
             return
         
-        if format in ('GeoJSON', 'GeoBSON', 'GeoAMF', 'ProtoBuf'):
+        if format in ('GeoJSON', 'GeoBSON', 'GeoAMF', 'ProtoBuf', 'ProtoBufText'):
             content = self.content
             
             if 'wkt' in content['crs']:
