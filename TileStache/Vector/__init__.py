@@ -496,7 +496,6 @@ def _get_features(coord, properties, projection, layer, clipped, projected, spac
     bbox = _tile_perimeter_geom(coord, projection, clipped == 'padded')
     bbox.TransformTo(layer_sref)
     layer.SetSpatialFilter(bbox)
-    
     features = []
     mask = None
     
