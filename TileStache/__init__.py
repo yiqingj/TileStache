@@ -44,6 +44,7 @@ import Config
 
 # regular expression for PATH_INFO
 _pathinfo_pat = re.compile(r'^/?(?P<l>\w.+)/(?P<z>\d+)/(?P<x>-?\d+)/(?P<y>-?\d+)\.(?P<e>\w+)$')
+_tnpathinfo_pat = re.compile(r'/\w.+/(?P<z>\d+)/(?P<y>-?\d+)/(?P<x>-?\d+)$')
 _preview_pat = re.compile(r'^/?(?P<l>\w.+)/(preview\.html)?$')
 
 def getTile(layer, coord, extension, ignore_cached=False):
@@ -116,7 +117,13 @@ def splitPathInfo(pathinfo):
         path = _pathinfo_pat.match(pathinfo)
         layer, row, column, zoom, extension = [path.group(p) for p in 'lyxze']
         coord = Coordinate(int(row), int(column), int(zoom))
-
+    elif _tnpathinfo_pat.match(pathinfo or ''):
+        #handle Telenav specific url pattern
+        path  = _tnpathinfo_pat.match(pathinfo)
+        zoom, y, x = [path.group(p) for p in 'zyx']
+        coord = Coordinate(int(x), int(y), int(zoom))
+        extension = 'pb'
+        layer = 'osm'
     elif _preview_pat.match(pathinfo or ''):
         path = _preview_pat.match(pathinfo)
         layer, extension = path.group('l'), 'html'
