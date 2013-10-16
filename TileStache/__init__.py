@@ -117,11 +117,13 @@ def splitPathInfo(pathinfo):
         path = _pathinfo_pat.match(pathinfo)
         layer, row, column, zoom, extension = [path.group(p) for p in 'lyxze']
         coord = Coordinate(int(row), int(column), int(zoom))
+        print coord
     elif _tnpathinfo_pat.match(pathinfo or ''):
         #handle Telenav specific url pattern
         path  = _tnpathinfo_pat.match(pathinfo)
         format, zoom, y, x = [path.group(p) for p in 'fzyx']
         coord = Coordinate(int(x), int(y), int(zoom))
+        print coord
         if format in ['pbt', 'json', 'geojson']:
             extension = format
         else:
