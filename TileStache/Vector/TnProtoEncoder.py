@@ -57,7 +57,10 @@ def _encode(content):
             rf = tile.rf.add()
             rf.roadType = _highwayToPBRoadType(prop['highway'])
             rf.roadSubType = vector_pb2.RST_COMMON
-            rf.featureID = prop['osm_id']
+            id = prop['osm_id']
+            if id<0:
+                id = -id
+            rf.featureID = id
             _coordToPBPolyline(geom['coordinates'], rf.lines.add())
         elif type == '': # at this moment there should be no other types
             pass
