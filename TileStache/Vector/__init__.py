@@ -226,7 +226,10 @@ class VectorResponse:
                 else:
                     out.write(atom)
         elif format == 'ProtoBuf':
-            encoded = TnProtoEncoder.encode(content)
+            encoded = TnProtoEncoder.encodeBinary(content)
+            out.write(encoded)
+        elif format == 'ProtoBufText':
+            encoded = TnProtoEncoder.encodeText(content)
             out.write(encoded)
         elif format in ('GeoBSON', 'ArcBSON'):
             import bson
@@ -606,6 +609,9 @@ class Provider:
         """
         if extension.lower() == 'pb':
             return 'application/x-protobuf', 'ProtoBuf'
+
+        elif extension.lower() == 'pbt':
+            return 'text/plain', 'ProtoBufText'
 
         elif extension.lower() == 'geojson':
             return 'application/json', 'GeoJSON'

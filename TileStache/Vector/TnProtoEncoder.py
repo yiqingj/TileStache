@@ -47,7 +47,7 @@ def _coordToPBPolyline(coordinates, polyline):
     return
 
 
-def encode(content):
+def _encode(content):
     tile = vector_pb2.VectorMapTile()
     for feature in content['features']:
         geom = feature['geometry']
@@ -61,6 +61,12 @@ def encode(content):
             _coordToPBPolyline(geom['coordinates'], rf.lines.add())
         elif type == '': # at this moment there should be no other types
             pass
-    return tile.SerializeToString()  #protobuf binary data in string form
+    return tile
+
+def encodeBinary(content):
+    return _encode(content).SerializeToString() #protobuf binary data in string form
+
+def encodeText(content):
+    return _encode(content).__str__()
 
 
