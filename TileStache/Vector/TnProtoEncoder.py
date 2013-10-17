@@ -26,6 +26,8 @@ def _highwayToPBRoadType(highway):
         return common_pb2.RT_LOCAL
     elif highway == 'path':
         return common_pb2.RT_NON_NAVIGABLE
+    elif highway == 'unclassified':
+        return common_pb2.RT_LOCAL
     else:
         print 'unknown highway: ', highway
         return common_pb2.RT_UNKNOWN
