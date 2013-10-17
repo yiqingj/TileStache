@@ -53,7 +53,7 @@ def _encode(content):
         geom = feature['geometry']
         prop = feature['properties']
         type = geom['type']
-        if type == 'LineString':
+        if type == 'LineString' or 'MultiLineString':
             roadType = _highwayToPBRoadType(prop['highway'])
             if roadType == common_pb2.RT_UNKNOWN:
                 continue
@@ -67,8 +67,13 @@ def _encode(content):
             if id<0:
                 id = -id
             rf.featureID = id
-            _coordToPBPolyline(geom['coordinates'], rf.lines.add())
-        elif type == '': # at this moment there should be no other types
+            if type == 'MultiLineString':
+                for coord in geom['coordinates']:
+                    #mrf = tile.rf.add()
+                    _coordToPBPolyline(coord, rf.lines.add())
+            else:
+                _coordToPBPolyline(geom['coordinates'], rf.lines.add())
+        else: # at this moment there should be no other types
             pass
     return tile
 
