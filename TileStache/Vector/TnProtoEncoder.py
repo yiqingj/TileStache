@@ -68,9 +68,14 @@ def _encode(content):
                 id = -id
             rf.featureID = id
             if type == 'MultiLineString':
-                for coord in geom['coordinates']:
-                    #mrf = tile.rf.add()
+                coords = geom['coordinates']
+                lastIndex = len(coords)-1
+                for i, coord in enumerate(coords):
                     _coordToPBPolyline(coord, rf.lines.add())
+                    if i < lastIndex:
+                        nrf = tile.rf.add()
+                        nrf.CopyFrom(rf)
+                        rf = nrf
             else:
                 _coordToPBPolyline(geom['coordinates'], rf.lines.add())
         else: # at this moment there should be no other types
