@@ -54,8 +54,11 @@ def _encode(content):
         prop = feature['properties']
         type = geom['type']
         if type == 'LineString':
+            roadType = _highwayToPBRoadType(prop['highway'])
+            if roadType == common_pb2.RT_UNKNOWN:
+                continue
             rf = tile.rf.add()
-            rf.roadType = _highwayToPBRoadType(prop['highway'])
+            rf.roadType = roadType
             rf.roadSubType = vector_pb2.RST_COMMON
             name = prop['name']
             if name is not None:
