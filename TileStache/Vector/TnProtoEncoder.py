@@ -42,6 +42,8 @@ def _coordToPBPolyline(coordinates, polyline):
         else:
             lat = ll[1] - lastLat
             lon = ll[0] - lastLon
+            lastLat = ll[1]
+            lastLon = ll[0]
         polyline.latlon.append(int(lat * 1000000))
         polyline.latlon.append(int(lon * 1000000))
     return
