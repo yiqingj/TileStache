@@ -21,7 +21,7 @@ def _highwayToPBRoadType(highway):
     elif highway == 'service':
         return common_pb2.RT_TERMINAL
     elif highway == 'footway':
-        return common_pb2.RT_NON_NAVIGABLE
+        return common_pb2.RT_PEDESTRIAN
     elif highway.startswith('tertiary'):
         return common_pb2.RT_LOCAL
     elif highway == 'path':
@@ -29,7 +29,7 @@ def _highwayToPBRoadType(highway):
     elif highway == 'unclassified':
         return common_pb2.RT_LOCAL
     else:
-        print 'unknown highway: ', highway
+        #print 'unknown highway: ', highway
         return common_pb2.RT_UNKNOWN
 
 
