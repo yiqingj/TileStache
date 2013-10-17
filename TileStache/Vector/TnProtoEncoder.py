@@ -57,6 +57,9 @@ def _encode(content):
             rf = tile.rf.add()
             rf.roadType = _highwayToPBRoadType(prop['highway'])
             rf.roadSubType = vector_pb2.RST_COMMON
+            name = prop['name']
+            if name is not None:
+                rf.roadName = name
             id = prop['osm_id']
             if id<0:
                 id = -id
