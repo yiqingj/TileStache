@@ -66,7 +66,7 @@ def _encode(content):
             rf.roadSubType = vector_pb2.RST_COMMON
             name = prop['name']
             if name is not None:
-                rf.roadName = name
+                rf.roadName = unicode(name)
             id = prop['osm_id']
             if id<0:
                 id = -id
