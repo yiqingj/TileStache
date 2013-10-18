@@ -81,9 +81,10 @@ def _encode(features):
             if name is not None:
                 rf.roadName = unicode(name,'utf-8')
             id = geom.get('id')
-            if id<0:
-                id = -id
-            rf.featureID = id
+            if id is not None:
+                if id<0:
+                    id = -id
+                rf.featureID = id
             if type == 'MultiLineString':
                 coords = geom['coordinates']
                 lastIndex = len(coords)-1
