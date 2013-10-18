@@ -77,10 +77,10 @@ def _encode(features):
             rf = tile.rf.add()
             rf.roadType = roadType
             rf.roadSubType = vector_pb2.RST_COMMON
-            name = prop['name']
+            name = prop.get('name')
             if name is not None:
                 rf.roadName = unicode(name,'utf-8')
-            id = prop['osm_id']
+            id = geom.get('id')
             if id<0:
                 id = -id
             rf.featureID = id
