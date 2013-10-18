@@ -22,7 +22,7 @@ except ImportError, err:
     def connect(*args, **kwargs):
         raise err
 
-from . import mvt, geojson, topojson
+from . import mvt, geojson, topojson, protobuf
 from ...Geography import SphericalMercator
 from ModestMaps.Core import Point
 
@@ -162,13 +162,19 @@ class Provider:
         '''
         if extension.lower() == 'mvt':
             return 'application/octet-stream+mvt', 'MVT'
-        
+
+        elif extension.lower() == 'pb':
+            return 'application/x-protobuf', 'ProtoBuf'
+
+        elif extension.lower() == 'pbt':
+            return 'text/plain', 'ProtoBufText'
+
         elif extension.lower() == 'json':
             return 'application/json', 'JSON'
         
         elif extension.lower() == 'topojson':
             return 'application/json', 'TopoJSON'
-        
+
         else:
             raise ValueError(extension)
 
@@ -206,6 +212,12 @@ class MultiProvider:
         '''
         if extension.lower() == 'json':
             return 'application/json', 'JSON'
+
+        elif extension.lower() == 'pb':
+            return 'application/x-protobuf', 'ProtoBuf'
+
+        elif extension.lower() == 'pbt':
+            return 'text/plain', 'ProtoBufText'
         
         elif extension.lower() == 'topojson':
             return 'application/json', 'TopoJSON'
@@ -274,7 +286,13 @@ class Response:
         
         elif format == 'JSON':
             geojson.encode(out, features, self.zoom, self.clip)
-        
+
+        elif format == 'ProtoBuf':
+            protobuf.encode(out,features)
+
+        elif format == 'ProtoBufText':
+            protobuf.encodeTxt(out, features)
+
         elif format == 'TopoJSON':
             ll = SphericalMercator().projLocation(Point(*self.bounds[0:2]))
             ur = SphericalMercator().projLocation(Point(*self.bounds[2:4]))
@@ -294,7 +312,13 @@ class EmptyResponse:
         '''
         if format == 'MVT':
             mvt.encode(out, [])
-        
+
+        elif format == 'ProtoBuf':
+            protobuf.encode(out,[])
+
+        elif format == 'ProtoBufText':
+            protobuf.encodeTxt(out,[])
+
         elif format == 'JSON':
             geojson.encode(out, [], 0, False)
         
@@ -319,9 +343,16 @@ class MultiResponse:
     def save(self, out, format):
         '''
         '''
+
         if format == 'TopoJSON':
             topojson.merge(out, self.names, self.config, self.coord)
-        
+
+        elif format == 'ProtoBuf':
+            protobuf.merge(out,[])
+
+        elif format == 'ProtoBufText':
+            protobuf.mergeTxt(out,[])
+
         elif format == 'JSON':
             geojson.merge(out, self.names, self.config, self.coord)
         
