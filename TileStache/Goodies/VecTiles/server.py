@@ -257,7 +257,7 @@ class Response:
         bbox = 'ST_MakeBox2D(ST_MakePoint(%.2f, %.2f), ST_MakePoint(%.2f, %.2f))' % bounds
         geo_query = build_query(srid, subquery, columns, bbox, tolerance, True, clip)
         merc_query = build_query(srid, subquery, columns, bbox, tolerance, False, clip)
-        self.query = dict(TopoJSON=geo_query, JSON=geo_query, MVT=merc_query)
+        self.query = dict(TopoJSON=geo_query, JSON=geo_query, ProtoBuf=geo_query, MVT=merc_query)
     
     def save(self, out, format):
         '''
