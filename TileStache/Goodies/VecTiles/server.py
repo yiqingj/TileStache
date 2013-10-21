@@ -104,7 +104,7 @@ class Provider:
         '''
         '''
         self.layer = layer
-        
+
         keys = 'host', 'user', 'password', 'database', 'port', 'dbname'
         self.dbinfo = dict([(k, v) for (k, v) in dbinfo.items() if k in keys])
 
@@ -112,29 +112,29 @@ class Provider:
         self.srid = int(srid)
         self.simplify = float(simplify)
         self.simplify_until = int(simplify_until)
-        
+
         self.queries = []
         self.columns = {}
-        
+
         for query in queries:
             if query is None:
                 self.queries.append(None)
                 continue
-        
+
             #
             # might be a file or URL?
             #
             url = urljoin(layer.config.dirpath, query)
             scheme, h, path, p, q, f = urlparse(url)
-            
+
             if scheme in ('file', '') and exists(path):
                 query = open(path).read()
-            
+
             elif scheme == 'http' and ' ' not in url:
                 query = urlopen(url).read()
-        
+
             self.queries.append(query)
-        
+
     def renderTile(self, width, height, srs, coord):
         ''' Render a single tile, return a Response instance.
         '''
@@ -146,15 +146,15 @@ class Provider:
         ll = self.layer.projection.coordinateProj(coord.down())
         ur = self.layer.projection.coordinateProj(coord.right())
         bounds = ll.x, ll.y, ur.x, ur.y
-        
+
         if not query:
             return EmptyResponse(bounds)
-        
+
         if query not in self.columns:
             self.columns[query] = query_columns(self.dbinfo, self.srid, query, bounds)
-        
+
         tolerance = self.simplify * tolerances[coord.zoom] if coord.zoom < self.simplify_until else None
-        
+
         return Response(self.dbinfo, self.srid, query, self.columns[query], bounds, tolerance, coord.zoom, self.clip)
 
     def getTypeByExtension(self, extension):
@@ -171,7 +171,7 @@ class Provider:
 
         elif extension.lower() == 'json':
             return 'application/json', 'JSON'
-        
+
         elif extension.lower() == 'topojson':
             return 'application/json', 'TopoJSON'
 
@@ -201,7 +201,7 @@ class MultiProvider:
     def __init__(self, layer, names):
         self.layer = layer
         self.names = names
-        
+
     def renderTile(self, width, height, srs, coord):
         ''' Render a single tile, return a Response instance.
         '''
@@ -218,10 +218,10 @@ class MultiProvider:
 
         elif extension.lower() == 'pbt':
             return 'text/plain', 'ProtoBufText'
-        
+
         elif extension.lower() == 'topojson':
             return 'application/json', 'TopoJSON'
-        
+
         else:
             raise ValueError(extension)
 
@@ -233,11 +233,11 @@ class Connection:
     '''
     def __init__(self, dbinfo):
         self.dbinfo = dbinfo
-    
+
     def __enter__(self):
         self.db = connect(**self.dbinfo).cursor(cursor_factory=RealDictCursor)
         return self.db
-    
+
     def __exit__(self, type, value, traceback):
         self.db.connection.close()
 
@@ -253,37 +253,37 @@ class Response:
         self.bounds = bounds
         self.zoom = zoom
         self.clip = clip
-        
+
         bbox = 'ST_MakeBox2D(ST_MakePoint(%.2f, %.2f), ST_MakePoint(%.2f, %.2f))' % bounds
         geo_query = build_query(srid, subquery, columns, bbox, tolerance, True, clip)
         merc_query = build_query(srid, subquery, columns, bbox, tolerance, False, clip)
         self.query = dict(TopoJSON=geo_query, JSON=geo_query, ProtoBuf=geo_query, ProtoBufText=geo_query, MVT=merc_query)
-    
+
     def save(self, out, format):
         '''
         '''
         with Connection(self.dbinfo) as db:
             db.execute(self.query[format])
-            
+
             features = []
-            
+
             for row in db.fetchall():
                 if row['__geometry__'] is None:
                     continue
-            
+
                 wkb = bytes(row['__geometry__'])
                 prop = dict([(k, v) for (k, v) in row.items()
                              if k not in ('__geometry__', '__id__')])
-                
+
                 if '__id__' in row:
                     features.append((wkb, prop, row['__id__']))
-                
+
                 else:
                     features.append((wkb, prop))
 
         if format == 'MVT':
             mvt.encode(out, features)
-        
+
         elif format == 'JSON':
             geojson.encode(out, features, self.zoom, self.clip)
 
@@ -297,7 +297,7 @@ class Response:
             ll = SphericalMercator().projLocation(Point(*self.bounds[0:2]))
             ur = SphericalMercator().projLocation(Point(*self.bounds[2:4]))
             topojson.encode(out, features, (ll.lon, ll.lat, ur.lon, ur.lat), self.clip)
-        
+
         else:
             raise ValueError(format)
 
@@ -306,7 +306,7 @@ class EmptyResponse:
     '''
     def __init__(self, bounds):
         self.bounds = bounds
-    
+
     def save(self, out, format):
         '''
         '''
@@ -321,12 +321,12 @@ class EmptyResponse:
 
         elif format == 'JSON':
             geojson.encode(out, [], 0, False)
-        
+
         elif format == 'TopoJSON':
             ll = SphericalMercator().projLocation(Point(*self.bounds[0:2]))
             ur = SphericalMercator().projLocation(Point(*self.bounds[2:4]))
             topojson.encode(out, [], (ll.lon, ll.lat, ur.lon, ur.lat), False)
-        
+
         else:
             raise ValueError(format)
 
@@ -339,7 +339,7 @@ class MultiResponse:
         self.config = config
         self.names = names
         self.coord = coord
-    
+
     def save(self, out, format):
         '''
         '''
@@ -355,7 +355,7 @@ class MultiResponse:
 
         elif format == 'JSON':
             geojson.merge(out, self.names, self.config, self.coord)
-        
+
         else:
             raise ValueError(format)
 
@@ -369,12 +369,12 @@ def query_columns(dbinfo, srid, subquery, bounds):
         while (abs(bounds[2] - bounds[0]) * abs(bounds[2] - bounds[0])) < 1.61e15:
             bbox = 'ST_MakeBox2D(ST_MakePoint(%f, %f), ST_MakePoint(%f, %f))' % bounds
             bbox = 'ST_SetSRID(%s, %d)' % (bbox, srid)
-        
+
             query = subquery.replace('!bbox!', bbox)
-        
+
             db.execute(query + '\n LIMIT 1') # newline is important here, to break out of comments.
             row = db.fetchone()
-            
+
             if row is None:
                 #
                 # Try zooming out three levels (8x) to look for features.
@@ -383,38 +383,38 @@ def query_columns(dbinfo, srid, subquery, bounds):
                           bounds[1] - (bounds[3] - bounds[1]) * 3.5,
                           bounds[2] + (bounds[2] - bounds[0]) * 3.5,
                           bounds[3] + (bounds[3] - bounds[1]) * 3.5)
-                
+
                 continue
-            
+
             column_names = set(row.keys())
             return column_names
-        
+
 def build_query(srid, subquery, subcolumns, bbox, tolerance, is_geo, is_clipped):
     ''' Build and return an PostGIS query.
     '''
     bbox = 'ST_SetSRID(%s, %d)' % (bbox, srid)
     geom = 'q.__geometry__'
-    
+
     if is_clipped:
         geom = 'ST_Intersection(%s, %s)' % (geom, bbox)
-    
+
     if tolerance is not None:
         geom = 'ST_SimplifyPreserveTopology(%s, %.2f)' % (geom, tolerance)
-    
+
     if is_geo:
         geom = 'ST_Transform(%s, 4326)' % geom
-    
+
     subquery = subquery.replace('!bbox!', bbox)
     columns = ['q."%s"' % c for c in subcolumns if c not in ('__geometry__', )]
-    
+
     if '__geometry__' not in subcolumns:
         raise Exception("There's supposed to be a __geometry__ column.")
-    
+
     if '__id__' not in subcolumns:
         columns.append('Substr(MD5(ST_AsBinary(q.__geometry__)), 1, 10) AS __id__')
-    
+
     columns = ', '.join(columns)
-    
+
     return '''SELECT %(columns)s,
                      ST_AsBinary(%(geom)s) AS __geometry__
               FROM (

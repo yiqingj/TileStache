@@ -9,7 +9,10 @@ from shapely.wkb import loads
 __author__ = 'yiqingj'
 
 
-def _highwayToPBRoadType(highway):
+def _highwayToPBRoadType(kind, highway):
+    '''
+    use highway tag if kind is not available .
+    '''
     if highway is None:
         return common_pb2.RT_UNKNOWN
     elif highway.startswith('motorway'):
@@ -71,7 +74,7 @@ def _encode(features):
         prop = feature['properties']
         type = geom['type']
         if type == 'LineString' or 'MultiLineString':
-            roadType = _highwayToPBRoadType(prop['highway'])
+            roadType = _highwayToPBRoadType(prop['kind'],prop['highway'])
             if roadType == common_pb2.RT_UNKNOWN:
                 continue
             rf = tile.rf.add()
@@ -80,11 +83,10 @@ def _encode(features):
             name = prop.get('name')
             if name is not None:
                 rf.roadName = unicode(name,'utf-8')
-            id = geom.get('id')
-            if id is not None:
-                if id<0:
-                    id = -id
-                rf.featureID = id
+            id = feature.get('id')
+            if id<0:
+                id = -id
+            rf.featureID = id
             if type == 'MultiLineString':
                 coords = geom['coordinates']
                 lastIndex = len(coords)-1
