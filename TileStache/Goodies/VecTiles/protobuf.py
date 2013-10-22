@@ -117,8 +117,14 @@ def _handlePointFeature(feature, tile):
     pf.subType = 'a'
     pf.name = prop.get('name') or prop['kind']
     coord = geom['coordinates']
-    pf.spline.latlon.append(int(coord[1]*1000000))
-    pf.spline.latlon.append(int(coord[0]*1000000))
+    lat = int(coord[1]*1000000)
+    lon = int(coord[0]*1000000)
+    pf.spline.latlon.append(lat)
+    pf.spline.latlon.append(lon-300)
+    pf.spline.latlon.append(0)
+    pf.spline.latlon.append(300)
+    pf.spline.latlon.append(0)
+    pf.spline.latlon.append(300)
 
 def _encode(features):
     try:
