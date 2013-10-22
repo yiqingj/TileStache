@@ -9,7 +9,7 @@ from shapely.wkb import loads
 __author__ = 'yiqingj'
 
 
-def _highwayToPBRoadType(kind, highway):
+def _matchRoadType(kind, highway):
     '''
     use highway tag if kind is not available .
     '''
@@ -41,6 +41,14 @@ def _highwayToPBRoadType(kind, highway):
         #print 'unknown highway: ', highway
         return common_pb2.RT_UNKNOWN
 
+def _matchPointType(kind):
+    if kind is None:
+        return vector_pb2.PT_UNKNOWN
+    elif kind == 'traffic_signals':
+        return vector_pb2.PT_ROAD
+    else:
+        return vector_pb2.PT_ROAD
+
 
 def _coordToPBPolyline(coordinates, polyline):
     lastLat = 0
@@ -55,9 +63,62 @@ def _coordToPBPolyline(coordinates, polyline):
             lon = ll[0] - lastLon
             lastLat = ll[1]
             lastLon = ll[0]
-        polyline.latlon.append(int(lat * 1000000))
-        polyline.latlon.append(int(lon * 1000000))
+        try:
+            polyline.latlon.append(int(lat * 1000000))
+            polyline.latlon.append(int(lon * 1000000))
+        except TypeError:
+            print ll
     return
+
+def _handleRoadFeature(feature, tile):
+    """
+    Handle Road feature, add converted feature to tile instance.
+    """
+    geom = feature['geometry']
+    prop = feature['properties']
+    type = geom['type']
+    roadType = _matchRoadType(prop['kind'],prop['highway'])
+    if roadType == common_pb2.RT_UNKNOWN:
+        return
+    rf = tile.rf.add()
+    rf.roadType = roadType
+    rf.roadSubType = vector_pb2.RST_COMMON
+    name = prop.get('name')
+    if name is not None:
+        rf.roadName = unicode(name,'utf-8')
+    id = int(feature.get('id'))
+    if id<0:
+        id = -id
+    rf.featureID = id
+    if type == 'MultiLineString':
+        coords = geom['coordinates']
+        lastIndex = len(coords)-1
+        for i, coord in enumerate(coords):
+            _coordToPBPolyline(coord, rf.lines.add())
+            if i < lastIndex:
+                nrf = tile.rf.add()
+                nrf.CopyFrom(rf)
+                rf = nrf
+    else:
+        _coordToPBPolyline(geom['coordinates'], rf.lines.add())
+
+def _handlePointFeature(feature, tile):
+    """
+    Handle Point feature, add converted feature to tile instance.
+    """
+    geom = feature['geometry']
+    prop = feature['properties']
+    type = geom['type']
+    pointType = _matchPointType(prop['kind'])
+    if pointType == vector_pb2.PT_UNKNOWN:
+        return
+    pf = tile.pf.add()
+    pf.mainType = vector_pb2.PT_ROAD
+    pf.subType = 'a'
+    pf.name = prop.get('name') or ''
+    coord = geom['coordinates']
+    pf.spline.latlon.append(int(coord[1]*1000000))
+    pf.spline.latlon.append(int(coord[0]*1000000))
 
 def _encode(features):
     try:
@@ -71,35 +132,13 @@ def _encode(features):
     tile = vector_pb2.VectorMapTile()
     for feature in features:
         geom = feature['geometry']
-        prop = feature['properties']
         type = geom['type']
-        if type == 'LineString' or 'MultiLineString':
-            roadType = _highwayToPBRoadType(prop['kind'],prop['highway'])
-            if roadType == common_pb2.RT_UNKNOWN:
-                continue
-            rf = tile.rf.add()
-            rf.roadType = roadType
-            rf.roadSubType = vector_pb2.RST_COMMON
-            name = prop.get('name')
-            if name is not None:
-                rf.roadName = unicode(name,'utf-8')
-            id = feature.get('id')
-            if id<0:
-                id = -id
-            rf.featureID = id
-            if type == 'MultiLineString':
-                coords = geom['coordinates']
-                lastIndex = len(coords)-1
-                for i, coord in enumerate(coords):
-                    _coordToPBPolyline(coord, rf.lines.add())
-                    if i < lastIndex:
-                        nrf = tile.rf.add()
-                        nrf.CopyFrom(rf)
-                        rf = nrf
-            else:
-                _coordToPBPolyline(geom['coordinates'], rf.lines.add())
+        if type == 'LineString' or type == 'MultiLineString':
+            _handleRoadFeature(feature, tile)
+        elif type == 'Point':
+            _handlePointFeature(feature, tile)
         else: # at this moment there should be no other types
-            pass
+            print type
     return tile
 
 def encode(out, features):
