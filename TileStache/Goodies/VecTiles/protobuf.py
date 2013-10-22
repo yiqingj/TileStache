@@ -115,7 +115,7 @@ def _handlePointFeature(feature, tile):
     pf = tile.pf.add()
     pf.mainType = vector_pb2.PT_ROAD
     pf.subType = 'a'
-    pf.name = prop.get('name') or type
+    pf.name = prop.get('name') or prop['kind']
     coord = geom['coordinates']
     pf.spline.latlon.append(int(coord[1]*1000000))
     pf.spline.latlon.append(int(coord[0]*1000000))

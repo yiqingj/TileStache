@@ -184,8 +184,8 @@ if __name__ == '__main__':
     m = mapnik.Map(256, 256)
     mapnik.load_map(m, 'osm.xml')
     provider = TileProvider(m)
-    ll = (-122.004025, 37.386410)
-    zoom = 15
+    ll = (-122.003991, 37.388423)
+    zoom = 17
     pfTile = provider.getTileByLatLon(ll, zoom)
     f = open('tile.pb', 'wb');
     f.write(pfTile.SerializeToString())
