@@ -39,7 +39,7 @@ UNION ALL
 SELECT
        highway,
        name,
-       'park' AS kind,
+       COALESCE("landuse", "leisure", "amenity") AS kind,
        way AS __geometry__,
 
        --
@@ -51,9 +51,8 @@ SELECT
 FROM planet_osm_polygon
 
 WHERE (
-      "landuse" IN ('park', 'forest', 'residential', 'retail', 'commercial',
-                    'industrial', 'railway', 'cemetery', 'grass', 'farmyard',
-                    'farm', 'farmland', 'wood', 'meadow', 'village_green',
-                    'recreation_ground', 'allotments', 'quarry')
+      "landuse" IN ('park', 'forest')
+   OR "leisure" IN ('park')
+   OR "amenity" IN ('university', 'hospital')
                     )
    AND Area(way) > 102400 -- 4px

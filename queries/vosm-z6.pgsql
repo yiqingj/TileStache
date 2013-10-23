@@ -21,7 +21,7 @@ FROM
     UNION
 
     SELECT name,
-           'park or protected land' AS kind,
+           'park' AS kind,
            the_geom AS __geometry__
     
     FROM ne_10m_parks_and_protected_lands

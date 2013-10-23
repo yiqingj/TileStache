@@ -70,9 +70,8 @@ SELECT
 FROM planet_osm_polygon
 
 WHERE (
-      "landuse" IN ('park', 'forest', 'residential', 'retail', 'commercial',
-                    'industrial', 'railway', 'cemetery', 'grass', 'farmyard',
-                    'farm', 'farmland', 'wood', 'meadow', 'village_green',
-                    'recreation_ground', 'allotments', 'quarry')
+      "landuse" IN ('park', 'forest')
+   OR "leisure" IN ('park')
+   OR "amenity" IN ('university', 'hospital')
    )
    AND Area(way) > 100 -- 4px

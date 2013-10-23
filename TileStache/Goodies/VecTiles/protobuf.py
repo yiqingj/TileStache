@@ -54,11 +54,21 @@ def _matchAreaType(kind):
         return vector_pb2.BK_AREA_UNKNOWN
     elif kind == 'park':
         return vector_pb2.BK_AREA_PARK
+    elif kind == 'forest':
+        return vector_pb2.BK_AREA_PARK
+    elif kind == 'university':
+        return vector_pb2.BK_AREA_BUILDING
     elif kind == 'urban area':
         return vector_pb2.BK_AREA_ISLAND
     elif kind == 'ocean':
         return vector_pb2.BK_AREA_WATER
+    elif kind == 'water':
+        return vector_pb2.BK_AREA_WATER
+    elif kind == 'riverbank':
+        return vector_pb2.BK_AREA_WATER
     elif kind == 'lake':
+        return vector_pb2.BK_AREA_WATER
+    elif kind == 'playa':
         return vector_pb2.BK_AREA_WATER
     else:
         return vector_pb2.BK_AREA_UNKNOWN
