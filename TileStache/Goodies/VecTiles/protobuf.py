@@ -54,12 +54,15 @@ def _matchAreaType(kind):
         return vector_pb2.BK_AREA_UNKNOWN
     elif kind == 'park':
         return vector_pb2.BK_AREA_PARK
+    elif kind == 'urban area':
+        return vector_pb2.BK_AREA_ISLAND
+    elif kind == 'ocean':
+        return vector_pb2.BK_AREA_WATER
+    elif kind == 'lake':
+        return vector_pb2.BK_AREA_WATER
     else:
-        return vector_pb2.BK_AREA_PARK
+        return vector_pb2.BK_AREA_UNKNOWN
 
-def _geoJsonToPBPolygon(coordinates, polygon):
-
-    pass
 def _geoJsonToPBPolyline(lineString, polyline):
     lastLat = 0
     lastLon = 0
@@ -141,6 +144,8 @@ def _handleAreaFeature(feature, tile):
     prop = feature['properties']
     type = geom['type']
     areaType = _matchAreaType(prop['kind'])
+    if areaType == vector_pb2.BK_AREA_UNKNOWN:
+        return
     af = tile.af.add()
     af.mainType = areaType
     af.subType = '900150'

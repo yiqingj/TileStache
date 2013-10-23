@@ -29,7 +29,7 @@ WHERE (
 
 UNION ALL
 
-SELECT name, kind, __geometry__, __id__
+SELECT '' AS highway, name, kind, __geometry__, __id__
 
 FROM
 (

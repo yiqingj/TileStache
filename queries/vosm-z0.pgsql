@@ -1,4 +1,4 @@
-SELECT name, kind, __geometry__
+SELECT '' AS highway, name, kind, __geometry__
 
 FROM
 (

@@ -2,9 +2,7 @@
 SELECT
     highway,
     name,
-    (CASE WHEN highway IN ('motorway') THEN 'highway'
-          WHEN highway IN ('trunk', 'primary') THEN 'major_road'
-          ELSE 'minor_road' END) AS kind,
+    'ocean' AS kind,
     way AS __geometry__,
     --
     -- Negative osm_id is synthetic, with possibly multiple geometry rows.
@@ -36,12 +34,12 @@ WHERE (
 
 UNION ALL
 
--- area features
+-- land features
 
 SELECT
        highway,
        name,
-       COALESCE("landuse", "leisure", "natural", "highway", "amenity") AS kind,
+       'park' AS kind,
        way AS __geometry__,
 
        --
@@ -57,9 +55,5 @@ WHERE (
                     'industrial', 'railway', 'cemetery', 'grass', 'farmyard',
                     'farm', 'farmland', 'wood', 'meadow', 'village_green',
                     'recreation_ground', 'allotments', 'quarry')
-   OR "leisure" IN ('park', 'garden', 'playground', 'golf_course', 'sports_centre',
-                    'pitch', 'stadium', 'common', 'nature_reserve')
-   OR "amenity" IN ('university', 'school', 'college', 'library', 'fuel',
-                    'parking', 'cinema', 'theatre', 'place_of_worship', 'hospital')
-   )
+                    )
    AND Area(way) > 102400 -- 4px
