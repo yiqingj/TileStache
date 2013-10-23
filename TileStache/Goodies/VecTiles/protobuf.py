@@ -163,6 +163,13 @@ def _handleAreaFeature(feature, tile):
         polygon = geom['coordinates']
         for ring in polygon:
             _geoJsonToPBPolyline(ring, af.rings.add())
+    elif type == 'MultiPolygon':
+        mp = geom['coordinates']
+        for polygon in mp:
+            for ring in polygon:
+                _geoJsonToPBPolyline(ring, af.rings.add())
+
+
 
 def _encode(features):
     try:
@@ -181,7 +188,7 @@ def _encode(features):
             _handleRoadFeature(feature, tile)
         elif type == 'Point':
             _handlePointFeature(feature, tile)
-        elif type == 'Polygon':
+        elif type == 'Polygon' or type == 'MultiPolygon':
             _handleAreaFeature(feature, tile)
         else: # at this moment there should be no other types
             print type
