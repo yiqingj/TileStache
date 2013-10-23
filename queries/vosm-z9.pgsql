@@ -24,6 +24,8 @@ WHERE (
 
 UNION ALL
 
+--water feature
+
 SELECT '' AS highway, name, kind, __geometry__, __id__
 
 FROM

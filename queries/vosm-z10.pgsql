@@ -2,7 +2,9 @@
 SELECT
     highway,
     name,
-    'ocean' AS kind,
+    (CASE WHEN highway IN ('motorway') THEN 'highway'
+          WHEN highway IN ('trunk', 'primary') THEN 'major_road'
+          ELSE 'minor_road' END) AS kind,
     way AS __geometry__,
     --
     -- Negative osm_id is synthetic, with possibly multiple geometry rows.
@@ -18,6 +20,8 @@ WHERE highway IN ('motorway')
 
 
 UNION ALL
+
+--point feature
 
 SELECT
        highway,
@@ -56,3 +60,50 @@ WHERE (
    OR "amenity" IN ('university', 'hospital')
                     )
    AND Area(way) > 102400 -- 4px
+
+UNION ALL
+
+--water feature
+
+SELECT '' AS highway, name, kind, __geometry__, __id__
+
+FROM
+(
+    --
+    -- Ocean
+    --
+    SELECT '' AS name,
+           'ocean' AS kind,
+           the_geom AS __geometry__,
+           gid::varchar AS __id__
+
+    FROM water_polygons
+
+    WHERE the_geom && !bbox!
+
+    --
+    -- Other water areas
+    --
+    UNION
+
+    SELECT name,
+           COALESCE("waterway", "natural", "landuse") AS kind,
+           way AS __geometry__,
+
+           --
+           -- Negative osm_id is synthetic, with possibly multiple geometry rows.
+           --
+           (CASE WHEN osm_id < 0 THEN Substr(MD5(ST_AsBinary(way)), 1, 10)
+                 ELSE osm_id::varchar END) AS __id__
+
+    FROM planet_osm_polygon
+
+    WHERE (
+         "waterway" IN ('riverbank')
+       OR "natural" IN ('water')
+       OR "landuse" IN ('basin', 'reservoir')
+       )
+       AND Area(way) > 102400 -- 4px
+       AND way && !bbox!
+
+) AS water_areas
