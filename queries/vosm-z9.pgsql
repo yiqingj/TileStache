@@ -15,7 +15,7 @@ SELECT
 FROM planet_osm_polygon
 
 WHERE (
-      "landuse" IN ('park', 'forest', )
+      "landuse" IN ('park', 'forest')
    OR "leisure" IN ('park')
    OR "amenity" IN ('university', 'hospital')
    )
