@@ -49,12 +49,22 @@ def _matchPointType(kind):
     else:
         return vector_pb2.PT_ROAD
 
+def _matchAreaType(kind):
+    if kind is None:
+        return vector_pb2.BK_AREA_UNKNOWN
+    elif kind == 'park':
+        return vector_pb2.BK_AREA_PARK
+    else:
+        return vector_pb2.BK_AREA_PARK
 
-def _coordToPBPolyline(coordinates, polyline):
+def _geoJsonToPBPolygon(coordinates, polygon):
+
+    pass
+def _geoJsonToPBPolyline(lineString, polyline):
     lastLat = 0
     lastLon = 0
-    for i in range(len(coordinates)):
-        ll = coordinates[i]
+    for i in range(len(lineString)):
+        ll = lineString[i]
         if i == 0:
             lat = lastLat = ll[1]
             lon = lastLon = ll[0]
@@ -94,13 +104,13 @@ def _handleRoadFeature(feature, tile):
         coords = geom['coordinates']
         lastIndex = len(coords)-1
         for i, coord in enumerate(coords):
-            _coordToPBPolyline(coord, rf.lines.add())
+            _geoJsonToPBPolyline(coord, rf.lines.add())
             if i < lastIndex:
                 nrf = tile.rf.add()
                 nrf.CopyFrom(rf)
                 rf = nrf
     else:
-        _coordToPBPolyline(geom['coordinates'], rf.lines.add())
+        _geoJsonToPBPolyline(geom['coordinates'], rf.lines.add())
 
 def _handlePointFeature(feature, tile):
     """
@@ -126,6 +136,19 @@ def _handlePointFeature(feature, tile):
     pf.spline.latlon.append(0)
     pf.spline.latlon.append(300)
 
+def _handleAreaFeature(feature, tile):
+    geom = feature['geometry']
+    prop = feature['properties']
+    type = geom['type']
+    areaType = _matchAreaType(prop['kind'])
+    af = tile.af.add()
+    af.mainType = areaType
+    af.subType = '900150'
+    if type == 'Polygon':
+        polygon = geom['coordinates']
+        for ring in polygon:
+            _geoJsonToPBPolyline(ring, af.rings.add())
+
 def _encode(features):
     try:
         # Assume three-element features
@@ -143,6 +166,8 @@ def _encode(features):
             _handleRoadFeature(feature, tile)
         elif type == 'Point':
             _handlePointFeature(feature, tile)
+        elif type == 'Polygon':
+            _handleAreaFeature(feature, tile)
         else: # at this moment there should be no other types
             print type
     return tile
