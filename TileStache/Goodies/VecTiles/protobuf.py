@@ -138,7 +138,7 @@ def _handlePointFeature(feature, tile):
     pf = tile.pf.add()
     pf.mainType = vector_pb2.PT_ROAD
     pf.subType = 'a'
-    pf.name = unicode(prop.get('name'),'utf-8') or prop['kind']
+    pf.name = unicode(prop.get('name') or prop['kind'], 'utf-8')
     coord = geom['coordinates']
     lat = int(coord[1]*1000000)
     lon = int(coord[0]*1000000)
