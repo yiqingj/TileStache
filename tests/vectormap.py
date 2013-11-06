@@ -182,12 +182,30 @@ if __name__ == '__main__':
     """
 
     m = mapnik.Map(256, 256)
+    print mapnik.__file__;
     mapnik.load_map(m, 'osm.xml')
     provider = TileProvider(m)
+    proj = GoogleProjection()
     ll = (-122.003991, 37.388423)
-    zoom = 17
-    pfTile = provider.getTileByLatLon(ll, zoom)
+    zoom = 15
+    tile = proj.fromLLtoTileId(ll, zoom)
+    print tile
+    bbox = provider.bbox(tile[0],tile[1],tile[2])
+    print bbox
+    m.zoom_to_box(bbox)
+    str = mapnik.render_pb(m)
     f = open('tile.pb', 'wb');
-    f.write(pfTile.SerializeToString())
+    f.write(str)
+    f.close()
+    print 'end'
+
+    f = open('tile.pb', 'rb');
+    pfTile = vector_pb2.VectorMapTile()
+    pfTile.ParseFromString(f.read())
+    print pfTile;
+
+    #pfTile = provider.getTileByLatLon(ll, zoom)
+    #f = open('tile.pb', 'wb');
+    #f.write(pfTile.SerializeToString())
     #print pfTile
 

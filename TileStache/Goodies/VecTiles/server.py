@@ -253,6 +253,7 @@ class Response:
         self.bounds = bounds
         self.zoom = zoom
         self.clip = clip
+        self.bounds = bounds
 
         bbox = 'ST_MakeBox2D(ST_MakePoint(%.2f, %.2f), ST_MakePoint(%.2f, %.2f))' % bounds
         geo_query = build_query(srid, subquery, columns, bbox, tolerance, True, clip)
@@ -288,10 +289,10 @@ class Response:
             geojson.encode(out, features, self.zoom, self.clip)
 
         elif format == 'ProtoBuf':
-            protobuf.encode(out,features)
+            protobuf.encode(out,features, self.bounds)
 
         elif format == 'ProtoBufText':
-            protobuf.encodeTxt(out, features)
+            protobuf.encodeTxt(out, features, self.bounds)
 
         elif format == 'TopoJSON':
             ll = SphericalMercator().projLocation(Point(*self.bounds[0:2]))

@@ -5,6 +5,7 @@ Implementation of Telenav Protobuf encoder.
 from map import vector_pb2, common_pb2
 
 from shapely.wkb import loads
+import mapnik
 
 __author__ = 'yiqingj'
 
@@ -170,8 +171,10 @@ def _handleAreaFeature(feature, tile):
                 _geoJsonToPBPolyline(ring, af.rings.add())
 
 
+m = mapnik.Map(256, 256)
+mapnik.load_map(m, 'osm.xml')
 
-def _encode(features):
+def _encode(features, bounds):
     try:
         # Assume three-element features
         features = [dict(properties=p, geometry=loads(g).__geo_interface__, id=i) for (g, p, i) in features]
@@ -192,13 +195,19 @@ def _encode(features):
             _handleAreaFeature(feature, tile)
         else: # at this moment there should be no other types
             print type
+
+    #handle labels, for now get it from mapnik lib
+    bbox = mapnik.Box2d(bounds[0],bounds[1],bounds[2],bounds[3])
+    m.zoom_to_box(bbox)
+    str = mapnik.render_pb(m)
+    tile.MergeFromString(str)
     return tile
 
-def encode(out, features):
-    pfTile = _encode(features)
+def encode(out, features, bounds):
+    pfTile = _encode(features, bounds)
     out.write(pfTile.SerializeToString())
-def encodeTxt(out, features):
-    pfTile = _encode(features)
+def encodeTxt(out, features, bounds):
+    pfTile = _encode(features, bounds)
     out.write(pfTile.__str__())
 
 

@@ -66,11 +66,11 @@
             ) as roads
         </Parameter>
         <Parameter name="type">postgis</Parameter>
-        <Parameter name="password">telenav</Parameter>
-        <Parameter name="host">ec2-54-211-204-95.compute-1.amazonaws.com</Parameter>
+        <Parameter name="password">postgres</Parameter>
+        <Parameter name="host">ec2-54-211-132-249.compute-1.amazonaws.com</Parameter>
         <Parameter name="port">5432</Parameter>
         <Parameter name="user">postgres</Parameter>
-        <Parameter name="dbname">openstreetmap</Parameter>
+        <Parameter name="dbname">osm_mapnik</Parameter>
         <!-- this should be 'false' if you are manually providing the 'extent' -->
         <Parameter name="estimate_extent">false</Parameter>
         <!-- manually provided extent in epsg 900913 for whole globe -->

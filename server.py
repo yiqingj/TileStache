@@ -14,8 +14,9 @@ from tests import vectormap
 
 @view_config(route_name='ref')
 def refTile(request):
-    conn = httplib.HTTPConnection("hqd-vectortilefscdn.telenav.com")
-    path = "/maps/v3/VectorTile/TomTom/NA/13M3c/%(zoom)s/%(y)s/%(x)s" % request.matchdict
+    conn = httplib.HTTPConnection("hqs-vectortilefscdn.telenav.com")
+    path = "/maps/v3/VectorTile/TomTom/NA/13M3/%(zoom)s/%(y)s/%(x)s" % request.matchdict
+    print path
     conn.request("GET", path)
     response = conn.getresponse()
     data =  response.read()
