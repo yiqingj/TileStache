@@ -12,6 +12,7 @@ from itertools import count
 from glob import glob
 from tempfile import mkstemp
 from urllib import urlopen
+from map import vector_pb2, common_pb2
 
 import os
 import logging
@@ -299,21 +300,68 @@ class GridProvider:
 
         return 'application/json; charset=utf-8', 'JSON'
 
-class SaveableResponse:
-    """ Wrapper class for JSON response that makes it behave like a PIL.Image object.
+class VectorProvider:
+    def __init__(self, layer, mapfile, fonts=None):
+        pass
+    @staticmethod
+    def prepareKeywordArgs(config_dict):
+        """ Convert configured parameters to keyword args for __init__().
+        """
+        kwargs = {'mapfile': config_dict['mapfile']}
 
-        TileStache.getTile() expects to be able to save one of these to a buffer.
-    """
+        for key in ('fields', 'layers', 'layer_index', 'scale', 'layer_id_key'):
+            if key in config_dict:
+                kwargs[key] = config_dict[key]
+
+        return kwargs
+    def renderArea(self, width, height, srs, xmin, ymin, xmax, ymax, zoom):
+        if global_mapnik_lock.acquire():
+            try:
+                if self.mapnik is None:
+                    self.mapnik = get_mapnikMap(self.mapfile)
+                    logging.debug('TileStache.Mapnik.ImageProvider.renderArea() %.3f to load %s', time() - start_time, self.mapfile)
+
+                self.mapnik.width = width
+                self.mapnik.height = height
+                self.mapnik.zoom_to_box(Box2d(xmin, ymin, xmax, ymax))
+                str = mapnik.render_pb(self.mapnik)
+
+            except:
+                self.mapnik = None
+                raise
+            finally:
+                # always release the lock
+                global_mapnik_lock.release()
+        return SaveableResponse(str)
+    def getTypeByExtension(self, extension):
+        """ Get mime-type and format by file extension.
+
+            This only accepts "pb/pbt".
+        """
+        if extension.lower() == 'pb':
+            return 'application/x-protobuf', 'ProtoBuf'
+
+        elif extension.lower() == 'pbt':
+            return 'text/plain', 'ProtoBufText'
+        else:
+            raise ValueError(extension)
+
+class SaveableResponse:
+
     def __init__(self, content, scale):
         self.content = content
         self.scale = scale
 
     def save(self, out, format):
-        if format != 'JSON':
-            raise KnownUnknown('MapnikGrid only saves .json tiles, not "%s"' % format)
-
-        bytes = json.dumps(self.content, ensure_ascii=False).encode('utf-8')
-        out.write(bytes)
+        if format == 'json':
+            bytes = json.dumps(self.content, ensure_ascii=False).encode('utf-8')
+            out.write(bytes)
+        elif format == 'pb':
+            out.write(self.content)
+        elif format == 'pbt':
+            tile = vector_pb2.VectorMapTile()
+            tile.ParseFromString(self.content)
+            out.write(tile.__str__())
     
     def crop(self, bbox):
         """ Return a cropped grid response.

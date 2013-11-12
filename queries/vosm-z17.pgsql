@@ -46,7 +46,7 @@ WHERE (
                     'parking', 'pharmacy', 'picnic_site', 'place_of_worship',
                     'police', 'post_box', 'post_office', 'prison', 'pub',
                     'recycling', 'restaurant', 'shelter', 'telephone', 'theatre',
-                    'toilets', 'veterinary')
+                    'toilets', 'veterinary','fire_hydrant')
    OR "barrier" IN ('block', 'bollard', 'gate', 'lift_gate')
    OR "highway" IN ('bus_stop', 'ford', 'gate', 'mini_roundabout', 'traffic_signals')
    OR "historic" IN ('archaeological_site', 'memorial')

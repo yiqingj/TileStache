@@ -74,7 +74,7 @@ def _matchAreaType(kind):
     else:
         return vector_pb2.BK_AREA_UNKNOWN
 
-def _geoJsonToPBPolyline(lineString, polyline):
+def _geoJsonToPBPolyline(lineString, polygon):
     lastLat = 0
     lastLon = 0
     for i in range(len(lineString)):
@@ -88,8 +88,8 @@ def _geoJsonToPBPolyline(lineString, polyline):
             lastLat = ll[1]
             lastLon = ll[0]
         try:
-            polyline.latlon.append(int(lat * 1000000))
-            polyline.latlon.append(int(lon * 1000000))
+            polygon.latlon.append(int(lat * 1000000))
+            polygon.latlon.append(int(lon * 1000000))
         except TypeError:
             print ll
     return
