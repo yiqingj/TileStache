@@ -126,7 +126,7 @@ def splitPathInfo(pathinfo):
             extension = format
         else:
             extension = 'pb'
-        layer = 'osm'
+        layer = 'osm3'
     elif _preview_pat.match(pathinfo or ''):
         path = _preview_pat.match(pathinfo)
         layer, extension = path.group('l'), 'html'

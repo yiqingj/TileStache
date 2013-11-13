@@ -113,6 +113,7 @@ def getProviderByName(name):
         return Mapnik.ImageProvider
 
     elif name.lower() == 'mapnik vector':
+        from . import Mapnik
         return Mapnik.VectorProvider
 
     elif name.lower() == 'proxy':

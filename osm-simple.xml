@@ -2,10 +2,15 @@
 <!DOCTYPE Map [
 <!ENTITY % entities SYSTEM "inc/entities.xml.inc">
 %entities;
+        <!ENTITY max_zoom8 "3000000">
+        <!ENTITY min_zoom8 "1500000">
+        <!ENTITY max_zoom9 "1500000">
+        <!ENTITY min_zoom9 "750000">
+        <!ENTITY max_zoom10 "750000">
+        <!ENTITY min_zoom10 "400000">
 ]>
-<Map background-color="#b5d0d0"
-    srs="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
-    minimum-version="2.0.0">
+
+<Map background-color="#b5d0d0" srs="&srs900913;" minimum-version="2.0.0">
     <FontSet name="book-fonts">
         <Font face-name="DejaVu Sans Book" />
         <Font face-name="unifont Medium" />
@@ -140,26 +145,36 @@
             </Filter>
       &maxscale_zoom10;
       &minscale_zoom18;
-            <PointSymbolizer/>
+            <PointSymbolizer />
         </Rule>
         <Rule>
             <Filter>[kind] = 'station'</Filter>
       &maxscale_zoom12;
       &minscale_zoom18;
-            <PointSymbolizer/>
+            <PointSymbolizer />
         </Rule>
         <Rule>
-            <Filter>[kind] = 'gate' or [kind] = 'hospital' or [kind] = 'parking'</Filter>
+            <Filter>[kind] = 'gate' or [kind] = 'hospital' or [kind] = 'parking'
+            </Filter>
       &maxscale_zoom15;
       &minscale_zoom18;
-            <PointSymbolizer/>
+            <PointSymbolizer />
         </Rule>
         <Rule>
-            <Filter>[kind] = 'fire_station' or [kind] = 'library' or [kind] = 'restaurant' or [kind] = 'traffic_signals' or [kind] = 'hotel' or kind = 'fire_hydrant'
+            <Filter>[kind] = 'fire_station' or [kind] = 'library' or [kind] =
+                'restaurant' or [kind] = 'traffic_signals' or [kind] = 'hotel' or
+                [kind] = 'fire_hydrant'
             </Filter>
       &maxscale_zoom17;
       &minscale_zoom18;
-            <PointSymbolizer/>
+            <PointSymbolizer />
+        </Rule>
+        <Rule>
+            <Filter>[name] = 'fake'
+            </Filter>
+      &maxscale_zoom10;
+      &minscale_zoom18;
+            <PointSymbolizer />
         </Rule>
     </Style>
     <Style name="roads">
@@ -209,6 +224,13 @@
             </Filter>
             <LineSymbolizer stroke="#aaa" stroke-width="0.6" />
         </Rule>
+        <Rule>
+      &maxscale_zoom15;
+      &minscale_zoom18;
+            <Filter>[highway] = 'service'
+            </Filter>
+            <LineSymbolizer stroke="#aaa" stroke-width="0.6" />
+        </Rule>
         <!-- RAIL -->
         <Rule>
       &maxscale_zoom6;
@@ -226,96 +248,117 @@
     </Style>
     <Style name="area">
         <Rule>
-            <Filter>[pixel] &lt; 100
-            </Filter>
-      &maxscale_zoom16;
-      &minscale_zoom18;
-            <PolygonSymbolizer fill="#aed1a0" />
-        </Rule>
-        <Rule>
-            <Filter>[pixel] &lt; 400 and [pixel] &gt;= 100
-            </Filter>
-      &maxscale_zoom15;
-      &minscale_zoom15;
-            <PolygonSymbolizer fill="#aed1a0" />
-        </Rule>
-        <Rule>
-            <Filter>[pixel] &lt; 1600 and [pixel] &gt;= 400
-            </Filter>
-      &maxscale_zoom14;
-      &minscale_zoom14;
-            <PolygonSymbolizer fill="#aed1a0" />
-        </Rule>
-        <Rule>
-            <Filter>[pixel] &lt; 6400 and [pixel] &gt;= 1600
-            </Filter>
-      &maxscale_zoom13;
-      &minscale_zoom13;
-            <PolygonSymbolizer fill="#aed1a0" />
-        </Rule>
-        <Rule>
-            <Filter>[pixel] &lt; 25600 and [pixel] &gt;= 6400
-            </Filter>
-      &maxscale_zoom12;
-      &minscale_zoom12;
-            <PolygonSymbolizer fill="#aed1a0" />
-        </Rule>
-        <Rule>
-            <Filter>[pixel] &lt; 102400 and [pixel] &gt;= 25600
-            </Filter>
-      &maxscale_zoom11;
-      &minscale_zoom11;
             <PolygonSymbolizer fill="#aed1a0" />
         </Rule>
         <Rule>
             <!-- fake a rule to trick mapnik to get the attribute -->
-            <Filter>[kind] = 'fake'
-            </Filter>
-      &maxscale_zoom10;
-      &minscale_zoom18;
-            <PolygonSymbolizer fill="#aed1a0" />
+            <Filter>[kind] = 'fake'</Filter>
+            <LineSymbolizer stroke="#aaa" stroke-width="0.6" />
         </Rule>
     </Style>
-    <Layer name="roads-text-name" status="on" srs="&osm2pgsql_projection;">
+    <Layer name="roads-text-name" status="on" maxzoom="&max_zoom10;"
+        srs="&osm2pgsql_projection;">
         <StyleName>roads-text-name</StyleName>
         <Datasource>
             <Parameter name="table">
                 (select way,highway,name
-                from planet_osm_line
+                from
+                planet_osm_line
                 where waterway IS NULL
                 and leisure IS NULL
-                and landuse IS NULL
+                and landuse
+                IS NULL
                 and name is not null
                 ) as roads
             </Parameter>
       &datasource-settings;
         </Datasource>
     </Layer>
-    <Layer name="roads" status="on" srs="&osm2pgsql_projection;">
+    <Layer name="water-land" minzoom="&min_zoom8;" status="on"
+        srs="&osm2pgsql_projection;">
+        <StyleName>area</StyleName>
+        <Datasource>
+            <Parameter name="table">
+                (SELECT
+                'ocean' AS kind,
+                ST_Intersection(the_geom, !bbox!) as the_geom,
+                gid::varchar AS __id__
+                FROM water_polygons
+                WHERE the_geom &amp;&amp; !bbox!
+                ) as water_land
+            </Parameter>
+      &datasource-settings;
+        </Datasource>
+    </Layer>
+    <Layer name="water-land-detail" maxzoom="&max_zoom9;" status="on"
+        srs="&osm2pgsql_projection;">
+        <StyleName>area</StyleName>
+        <Datasource>
+            <Parameter name="table">
+                (SELECT
+                'ocean' AS kind,
+                ST_Intersection(the_geom, !bbox!) as way,
+                gid::varchar AS __id__
+                FROM water_polygons
+                WHERE the_geom &amp;&amp; !bbox!
+                UNION
+                SELECT
+                COALESCE("waterway", "natural", "landuse") AS
+                kind,
+                way,
+                (CASE WHEN osm_id &lt; 0 THEN Substr(MD5(ST_AsBinary(way)),
+                1, 10)
+                ELSE osm_id::varchar END) AS __id__
+                FROM planet_osm_polygon
+                WHERE (
+                "waterway" IN ('riverbank')
+                OR "natural" IN ('water')
+                OR
+                "landuse" IN ('basin', 'reservoir')
+                )
+                AND
+                ST_isValid(way)
+                AND
+                way &amp;&amp; !bbox!
+                AND
+                Area(way) &gt; 4*!pixel_width!*!pixel_height!
+                ) as water_land
+            </Parameter>
+      &datasource-settings;
+        </Datasource>
+    </Layer>
+    <Layer name="roads" status="on" maxzoom="&max_zoom10;" srs="&osm2pgsql_projection;">
         <StyleName>roads</StyleName>
         <Datasource>
             <Parameter name="table">
                 (SELECT highway,name, railway,
                 ST_Intersection(way, !bbox!) as way,
                 (CASE WHEN
-                osm_id &lt; 0 THEN Substr(MD5(ST_AsBinary(way)), 1, 10)
+                osm_id &lt; 0 THEN
+                Substr(MD5(ST_AsBinary(way)), 1, 10)
                 ELSE
-                osm_id::varchar END) AS __id__
+                osm_id::varchar END) AS
+                __id__
                 FROM planet_osm_line
 
                 WHERE (highway IN
-                ('motorway', 'motorway_link', 'trunk', 'trunk_link','primary',
+                ('motorway',
+                'motorway_link', 'trunk', 'trunk_link','primary',
                 'primary_link','secondary', 'secondary_link', 'tertiary',
                 'tertiary_link','residential', 'unclassified',
-                'road', 'unclassified',
+                'road',
+                'unclassified',
                 'service', 'minor','footpath',
-                'track', 'footway', 'steps', 'pedestrian',
+                'track', 'footway',
+                'steps', 'pedestrian',
                 'path', 'cycleway')
                 OR
-                railway IN ('rail', 'tram', 'light_rail', 'narrow_guage',
+                railway IN ('rail',
+                'tram', 'light_rail', 'narrow_guage',
                 'monorail'))
                 AND
-                way &amp;&amp; !bbox!
+                way &amp;&amp;
+                !bbox!
                 AND
                 ST_Intersects(way,!bbox!)
                 ) as roads
@@ -323,77 +366,114 @@
       &datasource-settings;
         </Datasource>
     </Layer>
-    <Layer name="area" status="on" srs="&osm2pgsql_projection;">
+    <Layer name="area" status="on" maxzoom="&max_zoom10;" srs="&osm2pgsql_projection;">
         <StyleName>area</StyleName>
         <Datasource>
             <Parameter name="table">
                 (SELECT
                 Area(way) as pixel,
-                COALESCE("landuse", "leisure", "natural", "highway", "amenity") AS kind,
+                COALESCE("landuse", "leisure", "natural", "highway", "amenity") AS
+                kind,
                 ST_Intersection(way, !bbox!) as way,
-                (CASE WHEN osm_id &lt; 0 THEN Substr(MD5(ST_AsBinary(way)), 1, 10)
-                ELSE osm_id::varchar END) AS __id__
+                (CASE WHEN osm_id &lt; 0
+                THEN Substr(MD5(ST_AsBinary(way)), 1, 10)
+                ELSE osm_id::varchar END)
+                AS __id__
                 FROM planet_osm_polygon
-                WHERE (("landuse" IN ('park', 'forest')
+                WHERE (("landuse" IN ('park',
+                'forest')
                 OR "leisure" IN ('park')
-                OR "amenity" IN ('university', 'hospital')
+                OR "amenity" IN ('university',
+                'hospital')
                 ))
+                AND
+                ST_IsValid(way)
                 AND
                 way &amp;&amp; !bbox!
                 AND
                 ST_Intersects(way,!bbox!)
+                AND
+                Area(way) &gt;
+                4*!pixel_width!*!pixel_height!
                 ) as area
             </Parameter>
       &datasource-settings;
         </Datasource>
     </Layer>
-    <Layer name="point" status="on" srs="&osm2pgsql_projection;">
+    <Layer name="point" status="on" maxzoom="&max_zoom10;" srs="&osm2pgsql_projection;">
         <StyleName>points</StyleName>
         <Datasource>
             <Parameter name="table">
-                (SELECT highway,
-                name,
-                COALESCE("aerialway", "aeroway", "amenity", "barrier", "highway", "historic",
-                "leisure", "lock", "man_made", "natural", "power", "railway", "shop",
-                "tourism", "waterway") AS kind,
+                (SELECT
                 way,
+                COALESCE("aerialway", "aeroway",
+                "amenity", "barrier", "highway", "historic",
+                "leisure", "lock",
+                "man_made", "natural", "power", "railway", "shop",
+                "tourism",
+                "waterway") AS kind,
+                name,
                 osm_id::varchar AS __id__
 
-                FROM planet_osm_point
+                FROM
+                planet_osm_point
 
                 WHERE (
                 "aerialway" IN ('station')
-                OR "aeroway" IN ('aerodrome', 'airport', 'helipad')
-                OR "amenity" IN ('atm', 'bank', 'bar', 'bench', 'bicycle_rental',
+                OR "aeroway" IN
+                ('aerodrome', 'airport', 'helipad')
+                OR "amenity" IN ('atm', 'bank',
+                'bar', 'bench', 'bicycle_rental',
                 'biergarten',
-                'bus_station', 'bus_stop', 'cafe', 'car_sharing', 'cinema',
-                'courthouse', 'drinking_water', 'embassy', 'emergency_phone',
-                'fast_food', 'fire_station', 'fuel', 'hospital', 'library',
-                'parking', 'pharmacy', 'picnic_site', 'place_of_worship',
-                'police', 'post_box', 'post_office', 'prison', 'pub',
-                'recycling', 'restaurant', 'shelter', 'telephone', 'theatre',
-                'toilets', 'veterinary', 'waste_basket','fire_hydrant')
-                OR "barrier" IN ('block', 'bollard', 'gate', 'lift_gate')
-                OR "highway" IN ('bus_stop', 'ford', 'gate', 'mini_roundabout',
+                'bus_station',
+                'bus_stop', 'cafe', 'car_sharing', 'cinema',
+                'courthouse',
+                'drinking_water', 'embassy', 'emergency_phone',
+                'fast_food',
+                'fire_station', 'fuel', 'hospital', 'library',
+                'parking', 'pharmacy',
+                'picnic_site', 'place_of_worship',
+                'police', 'post_box',
+                'post_office', 'prison', 'pub',
+                'recycling', 'restaurant', 'shelter',
+                'telephone', 'theatre',
+                'toilets', 'veterinary',
+                'waste_basket','fire_hydrant')
+                OR "barrier" IN ('block', 'bollard',
+                'gate', 'lift_gate')
+                OR "highway" IN ('bus_stop', 'ford', 'gate',
+                'mini_roundabout',
                 'traffic_signals')
-                OR "historic" IN ('archaeological_site', 'memorial')
-                OR "leisure" IN ('playground', 'slipway')
-                OR "man_made" IN ('lighthouse', 'mast', 'power_wind', 'water_tower',
+                OR "historic" IN
+                ('archaeological_site', 'memorial')
+                OR "leisure" IN ('playground',
+                'slipway')
+                OR "man_made" IN ('lighthouse', 'mast', 'power_wind',
+                'water_tower',
                 'windmill')
-                OR "natural" IN ('cave_entrance', 'peak', 'spring', 'tree', 'volcano')
+                OR "natural" IN ('cave_entrance', 'peak',
+                'spring', 'tree', 'volcano')
                 OR "power" IN ('generator')
-                OR "railway" IN ('halt', 'level_crossing', 'station',
-                'subway_entrance', 'tram_stop')
-                OR "shop" IN ('bakery', 'bicycle', 'books', 'butcher', 'car',
+                OR "railway"
+                IN ('halt', 'level_crossing', 'station',
+                'subway_entrance',
+                'tram_stop')
+                OR "shop" IN ('bakery', 'bicycle', 'books', 'butcher',
+                'car',
                 'car_repair',
-                'clothes', 'computer', 'convenience', 'department_store',
-                'doityourself', 'dry_cleaning', 'fashion', 'florist', 'gift',
-                'greengrocer', 'hairdresser', 'jewelry', 'mobile_phone',
+                'clothes', 'computer', 'convenience',
+                'department_store',
+                'doityourself', 'dry_cleaning', 'fashion',
+                'florist', 'gift',
+                'greengrocer', 'hairdresser', 'jewelry',
+                'mobile_phone',
                 'optician', 'pet', 'supermarket')
-                OR "tourism" IN ('alpine_hut', 'bed_and_breakfast', 'camp_site',
+                OR "tourism" IN
+                ('alpine_hut', 'bed_and_breakfast', 'camp_site',
                 'caravan_site',
                 'chalet', 'guest_house', 'hostel', 'hotel', 'information',
-                'motel', 'museum', 'viewpoint')
+                'motel',
+                'museum', 'viewpoint')
                 OR "waterway" IN ('lock')
                 )
                 AND

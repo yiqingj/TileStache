@@ -302,7 +302,34 @@ class GridProvider:
 
 class VectorProvider:
     def __init__(self, layer, mapfile, fonts=None):
-        pass
+        """ Initialize Mapnik provider with layer and mapfile.
+
+            XML mapfile keyword arg comes from TileStache config,
+            and is an absolute path by the time it gets here.
+        """
+        maphref = urljoin(layer.config.dirpath, mapfile)
+        scheme, h, path, q, p, f = urlparse(maphref)
+
+        if scheme in ('file', ''):
+            self.mapfile = path
+        else:
+            self.mapfile = maphref
+
+        self.layer = layer
+
+        engine = mapnik.FontEngine.instance()
+        if fonts:
+            fontshref = urljoin(layer.config.dirpath, fonts)
+            scheme, h, path, q, p, f = urlparse(fontshref)
+
+            if scheme not in ('file', ''):
+                raise Exception('Fonts from "%s" can\'t be used by Mapnik' % fontshref)
+
+            for font in glob(path.rstrip('/') + '/*.ttf'):
+                engine.register_font(str(font))
+        #load mapnik settings
+        self.mapnik = get_mapnikMap(self.mapfile)
+
     @staticmethod
     def prepareKeywordArgs(config_dict):
         """ Convert configured parameters to keyword args for __init__().
@@ -317,22 +344,17 @@ class VectorProvider:
     def renderArea(self, width, height, srs, xmin, ymin, xmax, ymax, zoom):
         if global_mapnik_lock.acquire():
             try:
-                if self.mapnik is None:
-                    self.mapnik = get_mapnikMap(self.mapfile)
-                    logging.debug('TileStache.Mapnik.ImageProvider.renderArea() %.3f to load %s', time() - start_time, self.mapfile)
-
                 self.mapnik.width = width
                 self.mapnik.height = height
-                self.mapnik.zoom_to_box(Box2d(xmin, ymin, xmax, ymax))
+                bbox = Box2d(xmin, ymin, xmax, ymax)
+                self.mapnik.zoom_to_box(bbox)
                 str = mapnik.render_pb(self.mapnik)
-
             except:
-                self.mapnik = None
                 raise
             finally:
                 # always release the lock
                 global_mapnik_lock.release()
-        return SaveableResponse(str)
+        return SaveableResponse(str, 0)
     def getTypeByExtension(self, extension):
         """ Get mime-type and format by file extension.
 
@@ -356,12 +378,14 @@ class SaveableResponse:
         if format == 'json':
             bytes = json.dumps(self.content, ensure_ascii=False).encode('utf-8')
             out.write(bytes)
-        elif format == 'pb':
+        elif format == 'ProtoBuf':
             out.write(self.content)
-        elif format == 'pbt':
+        elif format == 'ProtoBufText':
             tile = vector_pb2.VectorMapTile()
             tile.ParseFromString(self.content)
             out.write(tile.__str__())
+        else:
+            raise ValueError(format)
     
     def crop(self, bbox):
         """ Return a cropped grid response.
@@ -444,6 +468,7 @@ def get_mapnikMap(mapfile):
     mmap = mapnik.Map(0, 0)
     
     if exists(mapfile):
+        print 'Loading mapfile:  ' + mapfile
         mapnik.load_map(mmap, str(mapfile))
     
     else:
